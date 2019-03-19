@@ -40,11 +40,11 @@ static void del_semvalue(int i);
 static int semaphore_p(int i);
 static int semaphore_v(int i);
 static void createSemaphores();
+static void destroySemaphores();
 bool debug();
 
 // simplest solution, odd numbered philosophers pick up right first even pick up left first
 int main(int argc, char* argv[]){
-    int running = 1;
     int status;
     void *shared_memory_1 = (void *)0;
     void *shared_memory_2 = (void*)0;
@@ -209,6 +209,26 @@ int main(int argc, char* argv[]){
             printf("\nMinimum value: %d", shared_data->data[NUM-1]);
             printf("\nMaximum value: %d", shared_data->data[0]);
             printf("\nMedian value: %d", shared_data->data[NUM/2]);
+
+            destroySemaphores();
+
+            if (shmdt(shared_memory_1) == -1) {
+                fprintf(stderr, "shmdt failed\n");
+                exit(EXIT_FAILURE);
+            }
+            if (shmdt(shared_memory_2) == -1) {
+                fprintf(stderr, "shmdt failed\n");
+                exit(EXIT_FAILURE);
+            }
+
+            if (shmctl(shmid1, IPC_RMID, 0) == -1) {
+                fprintf(stderr, "shmctl(IPC_RMID) failed\n");
+                exit(EXIT_FAILURE);
+            }
+            if (shmctl(shmid2, IPC_RMID, 0) == -1) {
+                fprintf(stderr, "shmctl(IPC_RMID) failed\n");
+                exit(EXIT_FAILURE);
+            }
             break;
     }
 
@@ -300,4 +320,15 @@ void createSemaphores(void) {
         fprintf(stderr, "Failed to initialize semaphore\n");
         exit(EXIT_FAILURE);
     }
+}
+
+void destroySemaphores(void) {
+    for(int i = 0; i < (NUM); i++) {
+        del_semvalue(data_sem[i]);
+
+    }
+    for (int i=0; i<(NUM-1); i++){
+        del_semvalue(status_sem[i]);
+    }
+    del_semvalue(count_sem);
 }
