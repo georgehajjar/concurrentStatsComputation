@@ -21,14 +21,9 @@ int dataTwo[5] = {10, 9, 11, 5, 7};
 struct shared_data {
     // initialize empty array to hold input data
     int data[NUM];
-};
-
-struct shared_registers {
-    // initialize empty array to hold input data
     int statusRegister[NUM-1];
     int count;
 };
-
 
 static int data_sem[NUM];
 static int status_sem[NUM-1];
@@ -45,23 +40,19 @@ int debug();
 int main(int argc, char* argv[]){
     int status;
     void *shared_memory_1 = (void *)0;
-    void *shared_memory_2 = (void*)0;
     struct shared_data *shared_data;
-    struct shared_registers *shared_registers;
     int shmid1;
     int debugOn = debug();
 
     shmid1 = shmget((key_t)1234, sizeof(struct shared_data), 0666 | IPC_CREAT);
-    shmid2 = shmget((key_t)1235, sizeof(struct shared_registers), 0666 | IPC_CREAT);
 
-    if (shmid1 == -1 || shmid2 == -1) {
+    if (shmid1 == -1 ) {
         fprintf(stderr, "shmget failed\n");
         exit(EXIT_FAILURE);
     }
 
     shared_memory_1 = shmat(shmid1, (void *)0, 0);
-    shared_memory_2 = shmat(shmid2, (void *)0, 0);
-    if (shared_memory_1 == (void *)-1 || shared_memory_2 == (void *)-1) {
+    if (shared_memory_1 == (void *)-1-1) {
         fprintf(stderr, "shmat failed\n");
         exit(EXIT_FAILURE);
     }
@@ -69,12 +60,11 @@ int main(int argc, char* argv[]){
     //printf("Memory attached at %X\n", (int)shared_memory);
 
     shared_data = (struct shared_data *)shared_memory_1;
-    shared_registers = (struct shared_register *)shared_memory_2;
 
     for(int i=0; i<NUM-1; i++){
-        shared_registers -> statusRegister[i] = 0;
+        shared_data -> statusRegister[i] = 0;
     }
-    shared_registers -> count = 0;
+    shared_data -> count = 0;
 
     printf("Enter %d distinct integers to be sorted (seperated by spaces).\n", NUM);
     for(int i = 0; i<NUM; i++){
@@ -107,7 +97,7 @@ int main(int argc, char* argv[]){
                 // child gets a lock on it's status
                 semaphore_p(status_sem[index]);
                 // check status
-                int status = shared_registers -> statusRegister[index];
+                int status = shared_data -> statusRegister[index];
                 // release lock
                 semaphore_v(status_sem[index]);
                 // if the status is a 1 continue
@@ -144,8 +134,8 @@ int main(int argc, char* argv[]){
                         // get a lock on status index i-1 if true change to false and decrement internal count else do nothing
                         if (index != 0){
                             semaphore_p(status_sem[index-1]);
-                            if (shared_registers -> statusRegister[index-1] == 1){
-                                shared_registers -> statusRegister[index-1] = 0;
+                            if (shared_data -> statusRegister[index-1] == 1){
+                                shared_data -> statusRegister[index-1] = 0;
                                 internal_count--;
                             }
                             // release
@@ -154,8 +144,8 @@ int main(int argc, char* argv[]){
                         // get a lock on index i+1 if true change to false and decrement internal count else do nothing
                         if (index != NUM-2){
                             semaphore_p(status_sem[index+1]);
-                            if (shared_registers -> statusRegister[index+1] == 1){
-                                shared_registers -> statusRegister[index+1] = 0;
+                            if (shared_data -> statusRegister[index+1] == 1){
+                                shared_data -> statusRegister[index+1] = 0;
                                 internal_count--;
                             }
                             // release
@@ -171,15 +161,15 @@ int main(int argc, char* argv[]){
                     internal_count ++;
 
                     semaphore_p(status_sem[index]);
-                    shared_registers -> statusRegister[index] = 1;
+                    shared_data -> statusRegister[index] = 1;
                     semaphore_v(status_sem[index]);
                     // get a lock on count, increase by internal count
                     semaphore_p(count_sem);
-                    shared_registers -> count += internal_count;
+                    shared_data -> count += internal_count;
                     semaphore_v(data_sem[index]);
                     semaphore_v(data_sem[index+1]);
                     // check if count is equal to n and if it is exit
-                    if (shared_registers -> count == NUM - 1){
+                    if (shared_data -> count == NUM - 1){
                         semaphore_v(count_sem);
                         // we're sorted
                         // exit the process
