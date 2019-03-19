@@ -109,62 +109,35 @@ int main(int argc, char* argv[]){
             while(true) {
                 // child gets a lock on it's status
                 semaphore_p(status_sem[index]);
-                if(debugOn == true){
-                    printf("%d gets a lock on its status\n", index);
-                }
                 // check status
                 int status = shared_registers -> statusRegister[index];
                 // release lock
                 semaphore_v(status_sem[index]);
-                if(debugOn == true){
-                    printf("%d releases alock on its status\n", index);
-                }
                 // if the status is a 1 continue
                 if (status == 1){
-                    if(debugOn == true){
-                        printf("%d, is set\n", index);
-                    }
                     continue;
                 }
                 // if the status is 0
                 else {
-                    if(debugOn == true){
-                        printf("%d, is not set\n", index);
-                    }
                     // internal count = 0;
                     internal_count = 0;
                     // if it's even
                     if (index%2 == 0){
                         //get a lock on the right one then the left one
                         semaphore_p(data_sem[index+1]);
-                        if(debugOn == true){
-                            printf("%d, gets a lock on data %d\n", index, index+1);
-                        }
                         semaphore_p(data_sem[index]);
-                        if(debugOn == true){
-                            printf("%d, gets a lock on data %d\n", index, index);
-                        }
 
                     }
                     // if it's odd
                     else{
                         // get a lock on the left one then the right one
                         semaphore_p(data_sem[index]);
-                        if(debugOn == true){
-                            printf("%d, gets a lock on data %d\n", index, index);
-                        }
                         semaphore_p(data_sem[index+1]);
-                        if(debugOn == true){
-                            printf("%d, gets a lock on data %d\n", index, index+1);
-                        }
                     }
                     // check the two values to see if they are in the right order
                     // if not
                     if (shared_data -> data[index] < shared_data -> data[index+1]){
                         // swap
-                        if(debugOn == true){
-                            printf("%d swapping values\n", index);
-                        }
                         int temp = shared_data -> data[index];
                         shared_data -> data[index] = shared_data -> data[index + 1];
                         shared_data -> data[index + 1] = temp;
@@ -177,9 +150,6 @@ int main(int argc, char* argv[]){
                             }
                             // release
                             semaphore_v(status_sem[index-1]);
-                            if(debugOn == true){
-                                printf("%d releases lock on status %d\n", index, index-1);
-                            }
                         }
                         // get a lock on index i+1 if true change to false and decrement internal count else do nothing
                         if (index != NUM-2){
@@ -190,47 +160,21 @@ int main(int argc, char* argv[]){
                             }
                             // release
                             semaphore_v(status_sem[index+1]);
-                            if(debugOn == true){
-                                printf("%d releases lock on status %d\n", index, index+1);
-                            }
                         }
                     }
                     else{
-                        if(debugOn == true){
-                            printf("not swapping values\n");
-                        }
                     }
                     // increase internal count by 1 and set its status to solved
                     internal_count ++;
 
                     semaphore_p(status_sem[index]);
-                    if(debugOn == true){
-                        printf("%d gets a lock on its status\n", index);
-                    }
                     shared_registers -> statusRegister[index] = 1;
                     semaphore_v(status_sem[index]);
-                    if(debugOn == true){
-                        printf("%d releases a lock on its status\n", index);
-                    }
                     // get a lock on count, increase by internal count
                     semaphore_p(count_sem);
-                    if(debugOn == true){
-                        printf("%d gets a lock on the count\n", index);
-                        printf("increasing count by %d\n", internal_count);
-                        printf("old count %d\n", shared_registers->count);
-                    }
                     shared_registers -> count += internal_count;
-                    if(debugOn == true){
-                        printf("new count %d\n", shared_registers->count);
-                    }
                     semaphore_v(data_sem[index]);
-                    if(debugOn == true){
-                        printf("%d releases a lock on data %d\n", index, index);
-                    }
                     semaphore_v(data_sem[index+1]);
-                    if(debugOn == true){
-                        printf("%d releases a lock on data %d\n", index, index+1);
-                    }
                     // check if count is equal to n and if it is exit
                     if (shared_registers -> count == NUM - 1){
                         semaphore_v(count_sem);
@@ -238,13 +182,7 @@ int main(int argc, char* argv[]){
                         // exit the process
                         exit(1);
                     }
-                    if(debugOn == true){
-                        printf("the array is not yet sorted\n");
-                    }
                     semaphore_v(count_sem);
-                    if(debugOn == true){
-                        printf("%d releases a lock on data %d\n", index, index+1);
-                    }
                 }
             }
 
