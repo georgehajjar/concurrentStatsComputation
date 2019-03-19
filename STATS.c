@@ -138,6 +138,9 @@ int main(int argc, char* argv[]){
                     // if not
                     if (shared_data -> data[index] < shared_data -> data[index+1]){
                         // swap
+                        if (debugOn){
+                            printf("Process %d (%d) swaps %d and %d\n", getpid(), index, shared_data -> data[index], shared_data -> data[index+1]);
+                        }
                         int temp = shared_data -> data[index];
                         shared_data -> data[index] = shared_data -> data[index + 1];
                         shared_data -> data[index + 1] = temp;
@@ -163,6 +166,9 @@ int main(int argc, char* argv[]){
                         }
                     }
                     else{
+                        if (debugOn){
+                            printf("Process %d (%d) does not swap %d and %d\n", getpid(), index, shared_data -> data[index], shared_data -> data[index+1]);
+                        }
                     }
                     // increase internal count by 1 and set its status to solved
                     internal_count ++;
@@ -196,13 +202,13 @@ int main(int argc, char* argv[]){
                 kill(pid[i], SIGKILL);
             }
             // sorted messages
-            printf("Sorted\n");
+            printf("\nSorted\n");
             for(int i = 0; i < NUM; i++) {
                 printf("%d ", shared_data->data[i]);
             }
-            printf("\nMinimum value: %d", shared_data->data[0]);
-            printf("\nMaximum value: %d", shared_data->data[4]);
-            printf("\nMedian value: %d", shared_data->data[2]);
+            printf("\nMinimum value: %d", shared_data->data[NUM-1]);
+            printf("\nMaximum value: %d", shared_data->data[0]);
+            printf("\nMedian value: %d", shared_data->data[NUM/2]);
             break;
     }
 
