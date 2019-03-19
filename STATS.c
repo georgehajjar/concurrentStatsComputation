@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -41,9 +40,8 @@ static int semaphore_p(int i);
 static int semaphore_v(int i);
 static void createSemaphores();
 static void destroySemaphores();
-bool debug();
+int debug();
 
-// simplest solution, odd numbered philosophers pick up right first even pick up left first
 int main(int argc, char* argv[]){
     int status;
     void *shared_memory_1 = (void *)0;
@@ -51,8 +49,7 @@ int main(int argc, char* argv[]){
     struct shared_data *shared_data;
     struct shared_registers *shared_registers;
     int shmid1;
-    int shmid2;
-    bool debugOn = debug();
+    int debugOn = debug();
 
     shmid1 = shmget((key_t)1234, sizeof(struct shared_data), 0666 | IPC_CREAT);
     shmid2 = shmget((key_t)1235, sizeof(struct shared_registers), 0666 | IPC_CREAT);
@@ -106,7 +103,7 @@ int main(int argc, char* argv[]){
         case 0:
             // do children things
             // while true
-            while(true) {
+            while(1) {
                 // child gets a lock on it's status
                 semaphore_p(status_sem[index]);
                 // check status
@@ -216,16 +213,7 @@ int main(int argc, char* argv[]){
                 fprintf(stderr, "shmdt failed\n");
                 exit(EXIT_FAILURE);
             }
-            if (shmdt(shared_memory_2) == -1) {
-                fprintf(stderr, "shmdt failed\n");
-                exit(EXIT_FAILURE);
-            }
-
             if (shmctl(shmid1, IPC_RMID, 0) == -1) {
-                fprintf(stderr, "shmctl(IPC_RMID) failed\n");
-                exit(EXIT_FAILURE);
-            }
-            if (shmctl(shmid2, IPC_RMID, 0) == -1) {
                 fprintf(stderr, "shmctl(IPC_RMID) failed\n");
                 exit(EXIT_FAILURE);
             }
@@ -235,17 +223,17 @@ int main(int argc, char* argv[]){
     // start forking
 }
 
-bool debug(void) {
+int debug(void) {
     char answer;
 
     printf("Do you want to use this program in debug mode? (y/n)\n");
     scanf(" %c", &answer);
 
     if (strcmp(&answer, "y") == 0) {
-        return true;
+        return 1;
     }
     else {
-        return false;
+        return 0;
     }
 
 
